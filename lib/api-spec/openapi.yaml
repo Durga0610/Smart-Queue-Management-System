@@ -1,36 +1,608 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: QueueLess Pulse - Smart Queue Management for Banks
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: session
+  - name: branches
+  - name: services
+  - name: bookings
+  - name: queue
+  - name: swap
+  - name: admin
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
-      summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
           content:
             application/json:
+              schema: { $ref: "#/components/schemas/HealthStatus" }
+
+  /session/register:
+    post:
+      operationId: registerUser
+      tags: [session]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterInput" }
+      responses:
+        "200":
+          description: Registered
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+
+  /session/login:
+    post:
+      operationId: loginUser
+      tags: [session]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginInput" }
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+
+  /session/me:
+    get:
+      operationId: getMe
+      tags: [session]
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+
+  /session/logout:
+    post:
+      operationId: logoutUser
+      tags: [session]
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /branches:
+    get:
+      operationId: listBranches
+      tags: [branches]
+      responses:
+        "200":
+          description: All branches with live pulse data
+          content:
+            application/json:
               schema:
-                $ref: "#/components/schemas/HealthStatus"
+                type: array
+                items: { $ref: "#/components/schemas/BranchPulse" }
+
+  /branches/{branchId}:
+    get:
+      operationId: getBranch
+      tags: [branches]
+      parameters:
+        - in: path
+          name: branchId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Branch detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BranchPulse" }
+
+  /services:
+    get:
+      operationId: listServices
+      tags: [services]
+      responses:
+        "200":
+          description: Bank services
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Service" }
+
+  /services/{serviceId}/checklist:
+    get:
+      operationId: getServiceChecklist
+      tags: [services]
+      parameters:
+        - in: path
+          name: serviceId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Document checklist
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ChecklistItem" }
+
+  /smart-slots:
+    get:
+      operationId: getSmartSlots
+      tags: [bookings]
+      parameters:
+        - in: query
+          name: branchId
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: serviceId
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: date
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Recommended slots ranked by lowest expected wait
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SmartSlot" }
+
+  /bookings:
+    get:
+      operationId: listMyBookings
+      tags: [bookings]
+      responses:
+        "200":
+          description: My bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Booking" }
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateBookingInput" }
+      responses:
+        "200":
+          description: Booking created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Booking" }
+
+  /bookings/{bookingId}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Booking
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Booking" }
+    delete:
+      operationId: cancelBooking
+      tags: [bookings]
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Cancelled
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /bookings/{bookingId}/checklist:
+    patch:
+      operationId: updateBookingChecklist
+      tags: [bookings]
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [completedItems]
+              properties:
+                completedItems:
+                  type: array
+                  items: { type: string }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Booking" }
+
+  /queue/track/{bookingId}:
+    get:
+      operationId: trackQueue
+      tags: [queue]
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Live queue tracking with leave-now sync
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QueueTracking" }
+
+  /swap/listings:
+    get:
+      operationId: listSwapOffers
+      tags: [swap]
+      responses:
+        "200":
+          description: Open swap listings posted by other users
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SwapListing" }
+
+  /swap/listings/mine:
+    get:
+      operationId: listMySwapOffers
+      tags: [swap]
+      responses:
+        "200":
+          description: My swap listings
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SwapListing" }
+
+  /swap/list:
+    post:
+      operationId: createSwapListing
+      tags: [swap]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bookingId]
+              properties:
+                bookingId: { type: integer }
+                note: { type: string }
+      responses:
+        "200":
+          description: Listed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SwapListing" }
+
+  /swap/{listingId}/accept:
+    post:
+      operationId: acceptSwap
+      tags: [swap]
+      parameters:
+        - in: path
+          name: listingId
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [myBookingId]
+              properties:
+                myBookingId: { type: integer }
+      responses:
+        "200":
+          description: Swap completed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /swap/{listingId}:
+    delete:
+      operationId: cancelSwapListing
+      tags: [swap]
+      parameters:
+        - in: path
+          name: listingId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Cancelled
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /admin/queue/{branchId}:
+    get:
+      operationId: adminQueueView
+      tags: [admin]
+      parameters:
+        - in: path
+          name: branchId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Branch queue view
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminQueueView" }
+
+  /admin/queue/{branchId}/next:
+    post:
+      operationId: callNextToken
+      tags: [admin]
+      parameters:
+        - in: path
+          name: branchId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Next token called
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Booking" }
+
+  /admin/booking/{bookingId}/status:
+    patch:
+      operationId: updateBookingStatus
+      tags: [admin]
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [booked, waiting, serving, completed, no_show, cancelled]
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Booking" }
+
+  /admin/stats/{branchId}:
+    get:
+      operationId: getBranchStats
+      tags: [admin]
+      parameters:
+        - in: path
+          name: branchId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Live throughput stats
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BranchStats" }
+
 components:
   schemas:
     HealthStatus:
       type: object
       properties:
-        status:
-          type: string
-      required:
-        - status
+        status: { type: string }
+      required: [status]
 
+    OkResponse:
+      type: object
+      properties:
+        ok: { type: boolean }
+      required: [ok]
+
+    RegisterInput:
+      type: object
+      required: [name, email, password]
+      properties:
+        name: { type: string }
+        email: { type: string }
+        password: { type: string }
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string }
+        password: { type: string }
+
+    User:
+      type: object
+      required: [id, name, email, role, karma]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        role: { type: string, enum: [customer, staff] }
+        karma: { type: integer }
+
+    BranchPulse:
+      type: object
+      required: [id, name, address, city, lat, lng, queueLength, avgWaitMinutes, pulseLevel, openCounters]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        address: { type: string }
+        city: { type: string }
+        lat: { type: number }
+        lng: { type: number }
+        queueLength: { type: integer }
+        avgWaitMinutes: { type: integer }
+        pulseLevel: { type: string, enum: [calm, moderate, busy, packed] }
+        openCounters: { type: integer }
+        nowServing: { type: string, nullable: true }
+
+    Service:
+      type: object
+      required: [id, name, code, avgDurationMinutes, icon, description]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        code: { type: string }
+        avgDurationMinutes: { type: integer }
+        icon: { type: string }
+        description: { type: string }
+
+    ChecklistItem:
+      type: object
+      required: [key, label, required]
+      properties:
+        key: { type: string }
+        label: { type: string }
+        required: { type: boolean }
+        hint: { type: string }
+
+    SmartSlot:
+      type: object
+      required: [timeSlot, expectedWaitMinutes, score, label]
+      properties:
+        timeSlot: { type: string }
+        expectedWaitMinutes: { type: integer }
+        score: { type: integer }
+        label: { type: string }
+        recommended: { type: boolean }
+
+    CreateBookingInput:
+      type: object
+      required: [branchId, serviceId, bookingDate, timeSlot]
+      properties:
+        branchId: { type: integer }
+        serviceId: { type: integer }
+        bookingDate: { type: string }
+        timeSlot: { type: string }
+        groupSize: { type: integer }
+
+    Booking:
+      type: object
+      required: [id, userId, branchId, branchName, serviceId, serviceName, bookingDate, timeSlot, tokenNumber, status, groupSize, checklistCompleted, checklistTotal, createdAt]
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        branchId: { type: integer }
+        branchName: { type: string }
+        serviceId: { type: integer }
+        serviceName: { type: string }
+        bookingDate: { type: string }
+        timeSlot: { type: string }
+        tokenNumber: { type: string }
+        status: { type: string, enum: [booked, waiting, serving, completed, no_show, cancelled] }
+        groupSize: { type: integer }
+        checklistCompleted: { type: integer }
+        checklistTotal: { type: integer }
+        createdAt: { type: string }
+
+    QueueTracking:
+      type: object
+      required: [booking, currentlyServing, peopleAhead, estimatedWaitMinutes, leaveNowAdvice, walkBufferMinutes, recentlyCompleted]
+      properties:
+        booking: { $ref: "#/components/schemas/Booking" }
+        currentlyServing: { type: string, nullable: true }
+        peopleAhead: { type: integer }
+        estimatedWaitMinutes: { type: integer }
+        leaveNowAdvice: { type: string }
+        walkBufferMinutes: { type: integer }
+        recentlyCompleted:
+          type: array
+          items: { type: string }
+
+    SwapListing:
+      type: object
+      required: [id, bookingId, ownerName, branchName, serviceName, bookingDate, timeSlot, tokenNumber, note, createdAt]
+      properties:
+        id: { type: integer }
+        bookingId: { type: integer }
+        ownerName: { type: string }
+        branchName: { type: string }
+        serviceName: { type: string }
+        bookingDate: { type: string }
+        timeSlot: { type: string }
+        tokenNumber: { type: string }
+        note: { type: string }
+        createdAt: { type: string }
+
+    AdminQueueView:
+      type: object
+      required: [branch, nowServing, upcoming, completedToday]
+      properties:
+        branch: { $ref: "#/components/schemas/BranchPulse" }
+        nowServing:
+          type: array
+          items: { $ref: "#/components/schemas/Booking" }
+        upcoming:
+          type: array
+          items: { $ref: "#/components/schemas/Booking" }
+        completedToday:
+          type: array
+          items: { $ref: "#/components/schemas/Booking" }
+
+    BranchStats:
+      type: object
+      required: [branchId, servedToday, avgServiceMinutes, peakHour, throughputPerHour, hourlyDistribution]
+      properties:
+        branchId: { type: integer }
+        servedToday: { type: integer }
+        avgServiceMinutes: { type: integer }
+        peakHour: { type: string }
+        throughputPerHour: { type: integer }
+        hourlyDistribution:
+          type: array
+          items:
+            type: object
+            required: [hour, count]
+            properties:
+              hour: { type: string }
+              count: { type: integer }

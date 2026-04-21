@@ -1,0 +1,120 @@
+Act as a full-stack developer and generate a complete web application called “QueueLess – Smart Queue Management System for Banks.”
+
+Objective:
+Create an online system where customers can book a queue token for bank services, track their position in the queue, and reduce waiting time at the bank.
+
+Technology Stack:
+Frontend: HTML, CSS, JavaScript
+Backend: Java (Spring Boot or Java Servlets)
+Database: MySQL
+API Communication: REST API
+
+Functional Requirements:
+
+1. User Registration and Login
+   Customers should be able to:
+
+- Register an account
+- Login securely
+- Logout
+
+Store user details in the database.
+
+2. Bank Service Selection
+   Provide a list of services such as:
+
+- Cash Deposit
+- Cash Withdrawal
+- Account Opening
+- Loan Enquiry
+
+Customers choose the service they need.
+
+3. Online Token Booking
+   After selecting the service, customers should:
+
+- Choose date
+- Choose time slot
+- Generate a queue token
+
+Example output:
+
+Token Number: B105
+Service: Cash Deposit
+Date: 12-06-2026
+Time Slot: 11:00 AM
+
+4. Queue Tracking
+   Customers should be able to see:
+
+- Current token being served
+- Their token number
+- Number of people ahead
+- Estimated waiting time
+
+5. Admin Dashboard (Bank Staff)
+   Admin should be able to:
+
+- View all tokens
+- Call next token
+- Update token status (Serving / Completed)
+- Manage services
+
+6. Token Status System
+   Token status values:
+
+- Booked
+- Waiting
+- Serving
+- Completed
+
+Database Tables:
+
+Users
+(id, name, email, password)
+
+Services
+(id, service_name)
+
+Bookings
+(id, user_id, service_id, booking_date, time_slot, token_number, status)
+
+Backend Requirements:
+
+- Create REST APIs in Java for:
+  - User registration and login
+  - Service list
+  - Token booking
+  - Queue status
+  - Admin token management
+- Use Java controllers, service layer, and database connection.
+
+Frontend Requirements:
+
+- Build responsive pages using HTML and CSS
+- Use JavaScript fetch API to call backend APIs
+- Create pages for:
+  - Login / Register
+  - Service selection
+  - Online booking
+  - Token display
+  - Queue tracking
+  - Admin dashboard
+
+Expected Workflow:
+
+1. User registers and logs in
+2. User selects bank service
+3. User books a token online
+4. System generates token number
+5. User tracks queue status
+6. Admin calls next token from dashboard
+
+Deliverables:
+
+- Complete HTML, CSS, JavaScript frontend
+- Java backend code
+- MySQL database schema
+- REST API documentation
+- Project folder structure
+- README file for GitHub
