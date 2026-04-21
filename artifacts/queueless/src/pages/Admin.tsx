@@ -165,7 +165,14 @@ export default function Admin() {
                   {queueView.upcoming.map((b, i) => (
                     <div key={b.id} className={`p-4 rounded-2xl border ${i===0 ? "border-primary/30 bg-primary/5" : "border-border bg-card"} flex items-center justify-between`}>
                       <div>
-                        <p className="text-xl font-bold text-foreground leading-none mb-1">{b.tokenNumber}</p>
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-xl font-bold text-foreground leading-none">{b.tokenNumber}</p>
+                          {b.priority && b.priority !== "normal" && (
+                            <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-[10px] font-bold uppercase tracking-wider">
+                              {b.priority}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">{b.serviceName} • {b.timeSlot}</p>
                       </div>
                       <DropdownMenu>

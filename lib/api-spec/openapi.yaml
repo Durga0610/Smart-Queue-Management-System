@@ -525,10 +525,13 @@ components:
         bookingDate: { type: string }
         timeSlot: { type: string }
         groupSize: { type: integer }
+        priority:
+          type: string
+          enum: [normal, senior, pregnant, disabled]
 
     Booking:
       type: object
-      required: [id, userId, branchId, branchName, serviceId, serviceName, bookingDate, timeSlot, tokenNumber, status, groupSize, checklistCompleted, checklistTotal, createdAt]
+      required: [id, userId, branchId, branchName, serviceId, serviceName, bookingDate, timeSlot, tokenNumber, status, groupSize, priority, checklistCompleted, checklistTotal, createdAt]
       properties:
         id: { type: integer }
         userId: { type: integer }
@@ -541,6 +544,7 @@ components:
         tokenNumber: { type: string }
         status: { type: string, enum: [booked, waiting, serving, completed, no_show, cancelled] }
         groupSize: { type: integer }
+        priority: { type: string, enum: [normal, senior, pregnant, disabled] }
         checklistCompleted: { type: integer }
         checklistTotal: { type: integer }
         createdAt: { type: string }

@@ -60,6 +60,7 @@ export const bookingsTable = pgTable("bookings", {
   tokenNumber: text("token_number").notNull(),
   status: text("status").notNull().default("booked"),
   groupSize: integer("group_size").notNull().default(1),
+  priority: text("priority").notNull().default("normal"),
   checklistDone: text("checklist_done").notNull().default("[]"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   servedAt: timestamp("served_at", { withTimezone: true }),

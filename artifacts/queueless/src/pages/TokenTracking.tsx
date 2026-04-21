@@ -118,6 +118,11 @@ export default function TokenTracking() {
             <div className="text-xl font-medium text-foreground">
               {booking.serviceName} <span className="text-muted-foreground mx-2">•</span> {booking.branchName}
             </div>
+            {booking.priority && booking.priority !== "normal" && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-bold uppercase tracking-wider">
+                Priority · {booking.priority}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-4">

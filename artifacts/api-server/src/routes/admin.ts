@@ -17,7 +17,8 @@ router.get("/admin/queue/:branchId", requireStaff, async (req, res): Promise<voi
     return;
   }
   const all = await db.select().from(bookingsTable).where(and(eq(bookingsTable.branchId, branchId), eq(bookingsTable.bookingDate, today)));
-  const sorted = all.sort((a, b) => a.timeSlot.localeCompare(b.timeSlot) || a.id - b.id);
+  const prio = (p: string) => (p && p !== "normal" ? 0 : 1);
+  const sorted = all.sort((a, b) => prio(a.priority) - prio(b.priority) || a.timeSlot.localeCompare(b.timeSlot) || a.id - b.id);
   const nowServing = await Promise.all(sorted.filter((b) => b.status === "serving").map(hydrateBooking));
   const upcoming = await Promise.all(sorted.filter((b) => b.status === "waiting" || b.status === "booked").map(hydrateBooking));
   const completedToday = await Promise.all(sorted.filter((b) => b.status === "completed").map(hydrateBooking));
@@ -35,7 +36,8 @@ router.post("/admin/queue/:branchId/next", requireStaff, async (req, res): Promi
   }
 
   const waiting = await db.select().from(bookingsTable).where(and(eq(bookingsTable.branchId, branchId), eq(bookingsTable.bookingDate, today), eq(bookingsTable.status, "waiting")));
-  const sorted = waiting.sort((a, b) => a.timeSlot.localeCompare(b.timeSlot) || a.id - b.id);
+  const prio = (p: string) => (p && p !== "normal" ? 0 : 1);
+  const sorted = waiting.sort((a, b) => prio(a.priority) - prio(b.priority) || a.timeSlot.localeCompare(b.timeSlot) || a.id - b.id);
   const next = sorted[0];
   if (!next) {
     res.status(404).json({ error: "No tokens waiting" });

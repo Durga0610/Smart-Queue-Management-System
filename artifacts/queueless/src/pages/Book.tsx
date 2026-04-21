@@ -15,7 +15,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format, addDays, startOfToday } from "date-fns";
-import { MapPin, Clock, ArrowRight, Activity, Calendar as CalendarIcon, CheckCircle2 } from "lucide-react";
+import { MapPin, Clock, ArrowRight, Activity, Calendar as CalendarIcon, CheckCircle2, Heart, Accessibility, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
@@ -31,6 +31,7 @@ export default function Book() {
   const [serviceId, setServiceId] = useState<number | undefined>(params.get("serviceId") ? Number(params.get("serviceId")) : undefined);
   const [date, setDate] = useState<Date | undefined>(addDays(startOfToday(), 1));
   const [timeSlot, setTimeSlot] = useState<string | undefined>();
+  const [priority, setPriority] = useState<"normal" | "senior" | "pregnant" | "disabled">("normal");
 
   const { data: branches, isLoading: branchesLoading } = useListBranches();
   const { data: services, isLoading: servicesLoading } = useListServices();
@@ -58,6 +59,7 @@ export default function Book() {
           serviceId,
           bookingDate: formattedDate,
           timeSlot,
+          priority,
         }
       },
       {
@@ -257,6 +259,33 @@ export default function Book() {
                   <h2 className="text-xl font-bold">Confirm Booking</h2>
                 </div>
                 
+                <div className="space-y-3">
+                  <p className="text-sm font-bold text-foreground">Priority Assistance</p>
+                  <p className="text-xs text-muted-foreground">Select if you qualify — priority guests are called ahead.</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {([
+                      { key: "normal", label: "Standard", icon: User },
+                      { key: "senior", label: "Senior 60+", icon: Heart },
+                      { key: "pregnant", label: "Pregnant", icon: Heart },
+                      { key: "disabled", label: "Disabled", icon: Accessibility },
+                    ] as const).map(({ key, label, icon: Icon }) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setPriority(key)}
+                        className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center gap-1.5 ${
+                          priority === key
+                            ? "border-primary bg-primary/5 ring-1 ring-primary"
+                            : "border-card-border hover:border-primary/50"
+                        }`}
+                      >
+                        <Icon className={`w-5 h-5 ${priority === key ? "text-primary" : "text-muted-foreground"}`} />
+                        <span className="text-xs font-medium">{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="bg-muted/30 border border-border rounded-2xl p-6 space-y-4">
                   <div className="flex items-start gap-4">
                     <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />

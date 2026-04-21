@@ -87,12 +87,23 @@ export interface SmartSlot {
   recommended?: boolean;
 }
 
+export type CreateBookingInputPriority =
+  (typeof CreateBookingInputPriority)[keyof typeof CreateBookingInputPriority];
+
+export const CreateBookingInputPriority = {
+  normal: "normal",
+  senior: "senior",
+  pregnant: "pregnant",
+  disabled: "disabled",
+} as const;
+
 export interface CreateBookingInput {
   branchId: number;
   serviceId: number;
   bookingDate: string;
   timeSlot: string;
   groupSize?: number;
+  priority?: CreateBookingInputPriority;
 }
 
 export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus];
@@ -104,6 +115,16 @@ export const BookingStatus = {
   completed: "completed",
   no_show: "no_show",
   cancelled: "cancelled",
+} as const;
+
+export type BookingPriority =
+  (typeof BookingPriority)[keyof typeof BookingPriority];
+
+export const BookingPriority = {
+  normal: "normal",
+  senior: "senior",
+  pregnant: "pregnant",
+  disabled: "disabled",
 } as const;
 
 export interface Booking {
@@ -118,6 +139,7 @@ export interface Booking {
   tokenNumber: string;
   status: BookingStatus;
   groupSize: number;
+  priority: BookingPriority;
   checklistCompleted: number;
   checklistTotal: number;
   createdAt: string;

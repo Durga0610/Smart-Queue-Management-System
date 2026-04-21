@@ -27,6 +27,7 @@ async function hydrate(b: typeof bookingsTable.$inferSelect) {
     tokenNumber: b.tokenNumber,
     status: b.status,
     groupSize: b.groupSize,
+    priority: b.priority,
     checklistCompleted: done.length,
     checklistTotal: checklist.length,
     createdAt: b.createdAt.toISOString(),
@@ -94,7 +95,7 @@ router.post("/bookings", requireUser, async (req, res): Promise<void> => {
     return;
   }
   const user = (req as ReqWithUser).user;
-  const { branchId, serviceId, bookingDate, timeSlot, groupSize } = parsed.data;
+  const { branchId, serviceId, bookingDate, timeSlot, groupSize, priority } = parsed.data;
   const [service] = await db.select().from(servicesTable).where(eq(servicesTable.id, serviceId)).limit(1);
   if (!service) {
     res.status(404).json({ error: "Service not found" });
@@ -114,6 +115,7 @@ router.post("/bookings", requireUser, async (req, res): Promise<void> => {
     tokenNumber,
     status: "waiting",
     groupSize: groupSize ?? 1,
+    priority: priority ?? "normal",
   }).returning();
   if (!b) {
     res.status(500).json({ error: "Could not create booking" });

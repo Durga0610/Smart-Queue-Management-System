@@ -24,9 +24,15 @@ router.get("/queue/track/:bookingId", async (req, res): Promise<void> => {
   const [branch] = await db.select().from(branchesTable).where(eq(branchesTable.id, b.branchId)).limit(1);
   const counters = Math.max(1, branch?.openCounters ?? 1);
 
+  const priorityRank = (p: string) => (p && p !== "normal" ? 0 : 1);
   const ordered = todays
     .filter((x) => x.status === "waiting" || x.status === "booked" || x.status === "serving")
-    .sort((a, b2) => a.timeSlot.localeCompare(b2.timeSlot) || a.id - b2.id);
+    .sort(
+      (a, b2) =>
+        priorityRank(a.priority) - priorityRank(b2.priority) ||
+        a.timeSlot.localeCompare(b2.timeSlot) ||
+        a.id - b2.id,
+    );
 
   const peopleAhead = Math.max(0, ordered.findIndex((x) => x.id === b.id));
   const minutesPerPerson = svc.get(b.serviceId)?.avgDurationMinutes ?? 8;

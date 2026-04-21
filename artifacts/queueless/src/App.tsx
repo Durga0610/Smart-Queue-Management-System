@@ -32,7 +32,7 @@ function Router() {
       <Route path="/branches" component={Branches} />
       <Route path="/branches/:id" component={BranchDetail} />
       <Route path="/book" component={Book} />
-      <Route path="/token/:id" component={TokenTracking} />
+      <Route path="/token/:bookingId" component={TokenTracking} />
       <Route path="/swap" component={Swap} />
       <Route path="/admin" component={Admin} />
       <Route path="/profile" component={Profile} />
