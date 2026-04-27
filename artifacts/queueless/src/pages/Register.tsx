@@ -37,8 +37,13 @@ export default function Register() {
           queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
           setLocation("/");
         },
-        onError: () => {
-          toast({ variant: "destructive", title: "Registration failed", description: "Please try again." });
+        onError: (err: unknown) => {
+          const data = (err as { data?: { error?: string } } | undefined)?.data;
+          const status = (err as { status?: number } | undefined)?.status;
+          const description =
+            data?.error ||
+            (status === 409 ? "That email is already registered. Try logging in instead." : "Please try again.");
+          toast({ variant: "destructive", title: "Registration failed", description });
         },
       }
     );

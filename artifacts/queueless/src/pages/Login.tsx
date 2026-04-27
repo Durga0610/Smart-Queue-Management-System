@@ -36,8 +36,13 @@ export default function Login() {
           queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
           setLocation("/");
         },
-        onError: () => {
-          toast({ variant: "destructive", title: "Login failed", description: "Invalid credentials." });
+        onError: (err: unknown) => {
+          const data = (err as { data?: { error?: string } } | undefined)?.data;
+          toast({
+            variant: "destructive",
+            title: "Login failed",
+            description: data?.error || "Invalid email or password.",
+          });
         },
       }
     );
