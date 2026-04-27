@@ -27,7 +27,6 @@ export function AuthGate({ children, requireStaff }: AuthGateProps) {
   }
 
   if (isError || !user) {
-    setLocation("/login");
     return null;
   }
 
