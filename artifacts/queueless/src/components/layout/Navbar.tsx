@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { useGetMe, useLogoutUser, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { LogOut, User, Activity, LayoutDashboard, Shuffle } from "lucide-react";
+import { NotificationBell } from "./NotificationBell";
 
 export function Navbar() {
   const { data: user } = useGetMe();
@@ -32,10 +33,13 @@ export function Navbar() {
           {user ? (
             <>
               {user.role === "customer" && (
-                <Link href="/swap" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                  <Shuffle className="w-4 h-4" />
-                  Swap
-                </Link>
+                <>
+                  <Link href="/swap" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                    <Shuffle className="w-4 h-4" />
+                    Swap
+                  </Link>
+                  <NotificationBell />
+                </>
               )}
               {user.role === "staff" && (
                 <Link href="/admin" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">

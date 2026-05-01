@@ -168,6 +168,17 @@ export interface SwapListing {
   createdAt: string;
 }
 
+export interface Notification {
+  id: number;
+  userId: number;
+  type: string;
+  title: string;
+  body: string;
+  read: boolean;
+  bookingId?: number | null;
+  createdAt: string;
+}
+
 export interface AdminQueueView {
   branch: BranchPulse;
   nowServing: Booking[];

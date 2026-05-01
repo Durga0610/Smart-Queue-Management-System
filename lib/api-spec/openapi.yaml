@@ -15,6 +15,7 @@ tags:
   - name: queue
   - name: swap
   - name: admin
+  - name: notifications
 
 paths:
   /healthz:
@@ -356,6 +357,46 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/OkResponse" }
 
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      responses:
+        "200":
+          description: My notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Notification" }
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      responses:
+        "200":
+          description: All marked read
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /notifications/{notificationId}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      parameters:
+        - in: path
+          name: notificationId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Marked read
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
   /admin/queue/{branchId}:
     get:
       operationId: adminQueueView
@@ -576,6 +617,19 @@ components:
         timeSlot: { type: string }
         tokenNumber: { type: string }
         note: { type: string }
+        createdAt: { type: string }
+
+    Notification:
+      type: object
+      required: [id, userId, type, title, body, read, createdAt]
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        type: { type: string }
+        title: { type: string }
+        body: { type: string }
+        read: { type: boolean }
+        bookingId: { type: integer, nullable: true }
         createdAt: { type: string }
 
     AdminQueueView:

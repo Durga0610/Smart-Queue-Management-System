@@ -66,6 +66,17 @@ export const bookingsTable = pgTable("bookings", {
   servedAt: timestamp("served_at", { withTimezone: true }),
 });
 
+export const notificationsTable = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => usersTable.id),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  read: integer("read").notNull().default(0),
+  bookingId: integer("booking_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 export const swapListingsTable = pgTable("swap_listings", {
   id: serial("id").primaryKey(),
   bookingId: integer("booking_id").notNull().references(() => bookingsTable.id),

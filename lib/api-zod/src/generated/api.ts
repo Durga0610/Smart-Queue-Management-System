@@ -355,6 +355,32 @@ export const CancelSwapListingResponse = zod.object({
   ok: zod.boolean(),
 });
 
+export const ListNotificationsResponseItem = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  type: zod.string(),
+  title: zod.string(),
+  body: zod.string(),
+  read: zod.boolean(),
+  bookingId: zod.number().nullish(),
+  createdAt: zod.string(),
+});
+export const ListNotificationsResponse = zod.array(
+  ListNotificationsResponseItem,
+);
+
+export const MarkAllNotificationsReadResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+export const MarkNotificationReadParams = zod.object({
+  notificationId: zod.coerce.number(),
+});
+
+export const MarkNotificationReadResponse = zod.object({
+  ok: zod.boolean(),
+});
+
 export const AdminQueueViewParams = zod.object({
   branchId: zod.coerce.number(),
 });

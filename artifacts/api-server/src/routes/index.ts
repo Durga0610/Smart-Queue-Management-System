@@ -7,6 +7,7 @@ import bookingsRouter from "./bookings";
 import queueRouter from "./queue";
 import swapRouter from "./swap";
 import adminRouter from "./admin";
+import notificationsRouter from "./notifications";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(bookingsRouter);
 router.use(queueRouter);
 router.use(swapRouter);
 router.use(adminRouter);
+router.use(notificationsRouter);
 
 export default router;

@@ -5,6 +5,7 @@ import { UpdateBookingStatusBody } from "@workspace/api-zod";
 import { requireStaff } from "../lib/auth";
 import { computeBranchPulse } from "../lib/queue";
 import { hydrateBooking } from "./bookings";
+import { createNotification } from "./notifications";
 
 const router: IRouter = Router();
 
@@ -45,7 +46,15 @@ router.post("/admin/queue/:branchId/next", requireStaff, async (req, res): Promi
   }
   await db.update(bookingsTable).set({ status: "serving" }).where(eq(bookingsTable.id, next.id));
   const [updated] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, next.id)).limit(1);
-  res.json(await hydrateBooking(updated!));
+  const hydratedNext = await hydrateBooking(updated!);
+  void createNotification(
+    next.userId,
+    "token_called",
+    "Your Token is Being Called!",
+    `Token ${next.tokenNumber} for ${hydratedNext.serviceName} at ${hydratedNext.branchName} is now being served. Please proceed to the counter.`,
+    next.id,
+  );
+  res.json(hydratedNext);
 });
 
 router.patch("/admin/booking/:bookingId/status", requireStaff, async (req, res): Promise<void> => {

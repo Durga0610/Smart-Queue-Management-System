@@ -4,6 +4,7 @@ import { and, eq, sql, desc } from "drizzle-orm";
 import { CreateBookingBody, UpdateBookingChecklistBody } from "@workspace/api-zod";
 import { requireUser } from "../lib/auth";
 import { generateTimeSlots, makeTokenNumber, computeBranchPulse } from "../lib/queue";
+import { createNotification } from "./notifications";
 
 const router: IRouter = Router();
 
@@ -121,7 +122,15 @@ router.post("/bookings", requireUser, async (req, res): Promise<void> => {
     res.status(500).json({ error: "Could not create booking" });
     return;
   }
-  res.json(await hydrate(b));
+  const hydratedBooking = await hydrate(b);
+  void createNotification(
+    user.id,
+    "booking_confirmed",
+    "Booking Confirmed",
+    `Your token ${tokenNumber} for ${hydratedBooking.serviceName} at ${hydratedBooking.branchName} is confirmed for ${bookingDate} at ${timeSlot}.`,
+    b.id,
+  );
+  res.json(hydratedBooking);
 });
 
 router.get("/bookings/:bookingId", requireUser, async (req, res): Promise<void> => {

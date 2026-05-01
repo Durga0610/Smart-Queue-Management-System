@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
-import { db, bookingsTable, servicesTable, branchesTable } from "@workspace/db";
+import { db, bookingsTable, servicesTable, branchesTable, notificationsTable } from "@workspace/db";
 import { and, eq, desc } from "drizzle-orm";
+import { createNotification } from "./notifications";
 import { hydrateBooking } from "./bookings";
 import { computeBranchPulse } from "../lib/queue";
 
@@ -52,6 +53,27 @@ router.get("/queue/track/:bookingId", async (req, res): Promise<void> => {
   else if (estimatedWaitMinutes <= walkBuffer + 3) leaveNowAdvice = "Leave now — you'll arrive just as your token is called.";
   else if (estimatedWaitMinutes <= walkBuffer + 15) leaveNowAdvice = `Start heading over in about ${Math.max(1, estimatedWaitMinutes - walkBuffer)} min.`;
   else leaveNowAdvice = `Plenty of time — relax for ${estimatedWaitMinutes - walkBuffer} more min before leaving.`;
+
+  if (
+    peopleAhead === 1 &&
+    b.status === "waiting" &&
+    b.userId
+  ) {
+    const alreadySent = await db
+      .select()
+      .from(notificationsTable)
+      .where(and(eq(notificationsTable.userId, b.userId), eq(notificationsTable.type, "nearly_there"), eq(notificationsTable.bookingId!, b.id)))
+      .limit(1);
+    if (alreadySent.length === 0) {
+      void createNotification(
+        b.userId,
+        "nearly_there",
+        "You're Next!",
+        `Token ${b.tokenNumber} — just 1 person ahead of you. Start heading to the branch now.`,
+        b.id,
+      );
+    }
+  }
 
   res.json({
     booking: await hydrateBooking(b),
