@@ -16,6 +16,7 @@ tags:
   - name: swap
   - name: admin
   - name: notifications
+  - name: sos
 
 paths:
   /healthz:
@@ -397,6 +398,99 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/OkResponse" }
 
+  /sos:
+    post:
+      operationId: raiseSos
+      tags: [sos]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RaiseSosBody" }
+      responses:
+        "200":
+          description: SOS raised
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SosRequest" }
+
+  /sos/booking/{bookingId}:
+    get:
+      operationId: getSosForBooking
+      tags: [sos]
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: SOS request or null
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - { $ref: "#/components/schemas/SosRequest" }
+                  - { type: "null" }
+
+  /admin/sos/{branchId}:
+    get:
+      operationId: listPendingSos
+      tags: [sos]
+      parameters:
+        - in: path
+          name: branchId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Pending SOS requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SosPendingItem" }
+
+  /admin/sos/{sosId}/approve:
+    post:
+      operationId: approveSos
+      tags: [sos]
+      parameters:
+        - in: path
+          name: sosId
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SosActionBody" }
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /admin/sos/{sosId}/reject:
+    post:
+      operationId: rejectSos
+      tags: [sos]
+      parameters:
+        - in: path
+          name: sosId
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SosActionBody" }
+      responses:
+        "200":
+          description: Rejected
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
   /admin/queue/{branchId}:
     get:
       operationId: adminQueueView
@@ -618,6 +712,45 @@ components:
         tokenNumber: { type: string }
         note: { type: string }
         createdAt: { type: string }
+
+    SosRequest:
+      type: object
+      required: [id, bookingId, userId, reason, status, createdAt]
+      properties:
+        id: { type: integer }
+        bookingId: { type: integer }
+        userId: { type: integer }
+        reason: { type: string }
+        status: { type: string }
+        staffNote: { type: string }
+        createdAt: { type: string }
+        resolvedAt: { type: string, nullable: true }
+
+    SosPendingItem:
+      type: object
+      required: [id, bookingId, userId, userName, tokenNumber, timeSlot, reason, status, createdAt]
+      properties:
+        id: { type: integer }
+        bookingId: { type: integer }
+        userId: { type: integer }
+        userName: { type: string }
+        tokenNumber: { type: string }
+        timeSlot: { type: string }
+        reason: { type: string }
+        status: { type: string }
+        createdAt: { type: string }
+
+    RaiseSosBody:
+      type: object
+      required: [bookingId, reason]
+      properties:
+        bookingId: { type: integer }
+        reason: { type: string }
+
+    SosActionBody:
+      type: object
+      properties:
+        staffNote: { type: string }
 
     Notification:
       type: object

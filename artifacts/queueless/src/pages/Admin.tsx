@@ -7,7 +7,11 @@ import {
   useAdminQueueView,
   useCallNextToken,
   useUpdateBookingStatus,
-  getAdminQueueViewQueryKey
+  useListPendingSos,
+  useApproveSos,
+  useRejectSos,
+  getAdminQueueViewQueryKey,
+  getListPendingSosQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,8 +19,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { Activity, Users, Clock, Zap, MoreVertical, Play } from "lucide-react";
+import { Activity, Users, Clock, Zap, MoreVertical, Play, Siren, ShieldCheck, ShieldX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Admin() {
   const { data: branches, isLoading: branchesLoading } = useListBranches();
@@ -30,11 +35,33 @@ export default function Admin() {
   const branchId = Number(selectedBranchId);
   const { data: stats } = useGetBranchStats(branchId, { query: { enabled: !!branchId } });
   const { data: queueView } = useAdminQueueView(branchId, { query: { enabled: !!branchId, refetchInterval: 3000 } });
-  
+  const { data: pendingSos = [] } = useListPendingSos(branchId, { query: { enabled: !!branchId, refetchInterval: 5000 } });
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const callNext = useCallNextToken();
   const updateStatus = useUpdateBookingStatus();
+  const approveSos = useApproveSos();
+  const rejectSos = useRejectSos();
+
+  const handleApproveSos = (sosId: number) => {
+    approveSos.mutate({ sosId }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListPendingSosQueryKey(branchId) });
+        queryClient.invalidateQueries({ queryKey: getAdminQueueViewQueryKey(branchId) });
+        toast({ title: "SOS Approved", description: "Token moved to front of queue." });
+      },
+    });
+  };
+
+  const handleRejectSos = (sosId: number) => {
+    rejectSos.mutate({ sosId }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListPendingSosQueryKey(branchId) });
+        toast({ title: "SOS Rejected" });
+      },
+    });
+  };
 
   const handleCallNext = () => {
     callNext.mutate(
@@ -118,6 +145,57 @@ export default function Admin() {
               </div>
             </Card>
           )}
+
+          {/* SOS Emergency Panel */}
+          <AnimatePresence>
+            {pendingSos.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              >
+                <Card className="p-6 rounded-3xl border-2 border-rose-400 bg-rose-50 shadow-lg">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-rose-600 flex items-center justify-center animate-pulse">
+                      <Siren className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-rose-800">SOS Emergency Requests</h3>
+                      <p className="text-xs text-rose-600">{pendingSos.length} pending — requires your action</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {pendingSos.map((s) => (
+                      <div key={s.id} className="bg-white rounded-2xl border border-rose-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className="font-black text-foreground text-lg">{s.tokenNumber}</span>
+                            <span className="text-sm font-medium text-muted-foreground">{s.userName}</span>
+                            <span className="text-xs text-muted-foreground">· {s.timeSlot}</span>
+                          </div>
+                          <p className="text-sm text-rose-800 font-medium leading-snug">"{s.reason}"</p>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                          <button
+                            onClick={() => handleApproveSos(s.id)}
+                            disabled={approveSos.isPending}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-colors shadow-sm"
+                          >
+                            <ShieldCheck className="w-4 h-4" /> Approve
+                          </button>
+                          <button
+                            onClick={() => handleRejectSos(s.id)}
+                            disabled={rejectSos.isPending}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold transition-colors shadow-sm"
+                          >
+                            <ShieldX className="w-4 h-4" /> Reject
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {queueView && (
             <div className="grid lg:grid-cols-3 gap-6">

@@ -168,6 +168,38 @@ export interface SwapListing {
   createdAt: string;
 }
 
+export interface SosRequest {
+  id: number;
+  bookingId: number;
+  userId: number;
+  reason: string;
+  status: string;
+  staffNote?: string;
+  createdAt: string;
+  resolvedAt?: string | null;
+}
+
+export interface SosPendingItem {
+  id: number;
+  bookingId: number;
+  userId: number;
+  userName: string;
+  tokenNumber: string;
+  timeSlot: string;
+  reason: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface RaiseSosBody {
+  bookingId: number;
+  reason: string;
+}
+
+export interface SosActionBody {
+  staffNote?: string;
+}
+
 export interface Notification {
   id: number;
   userId: number;

@@ -6,39 +6,51 @@ import {
   useGetServiceChecklist, 
   useUpdateBookingChecklist,
   useCreateSwapListing,
-  useCancelBooking
+  useCancelBooking,
+  useRaiseSos,
+  useGetSosForBooking,
 } from "@workspace/api-client-react";
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Clock, ArrowRight, AlertTriangle, Info, CheckCircle2, RefreshCw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { getGetSosForBookingQueryKey } from "@workspace/api-client-react";
+import { Users, Clock, ArrowRight, AlertTriangle, Info, CheckCircle2, RefreshCw, Siren, X, ShieldCheck, ShieldX } from "lucide-react";
 
 export default function TokenTracking() {
   const { bookingId } = useParams();
   const id = Number(bookingId);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: tracking, isLoading } = useTrackQueue(id, { query: { refetchInterval: 5000 } });
   const { data: checklist } = useGetServiceChecklist(tracking?.booking.serviceId || 0, {
     query: { enabled: !!tracking?.booking.serviceId }
   });
+  const { data: sosStatus } = useGetSosForBooking(id, {
+    query: { enabled: !!id, refetchInterval: 8000 }
+  });
 
   const updateChecklist = useUpdateBookingChecklist();
   const createSwapListing = useCreateSwapListing();
   const cancelBooking = useCancelBooking();
+  const raiseSos = useRaiseSos();
 
   const [completedItems, setCompletedItems] = useState<string[]>([]);
   const initChecklistRef = useRef(false);
+  const [swapNote, setSwapNote] = useState("");
+  const [swapDialogOpen, setSwapDialogOpen] = useState(false);
+  const [sosDialogOpen, setSosDialogOpen] = useState(false);
+  const [sosReason, setSosReason] = useState("");
 
   useEffect(() => {
     if (tracking && !initChecklistRef.current) {
-      // In a real app we'd fetch the saved checklist items, for now start empty
       initChecklistRef.current = true;
     }
   }, [tracking]);
@@ -48,9 +60,6 @@ export default function TokenTracking() {
     setCompletedItems(newItems);
     updateChecklist.mutate({ bookingId: id, data: { completedItems: newItems } });
   };
-
-  const [swapNote, setSwapNote] = useState("");
-  const [swapDialogOpen, setSwapDialogOpen] = useState(false);
 
   const handleCreateSwap = () => {
     createSwapListing.mutate(
@@ -79,6 +88,31 @@ export default function TokenTracking() {
     }
   };
 
+  const handleRaiseSos = () => {
+    if (!sosReason.trim()) return;
+    raiseSos.mutate(
+      { data: { bookingId: id, reason: sosReason.trim() } },
+      {
+        onSuccess: () => {
+          setSosDialogOpen(false);
+          setSosReason("");
+          queryClient.invalidateQueries({ queryKey: getGetSosForBookingQueryKey(id) });
+          toast({
+            title: "SOS Raised",
+            description: "Branch staff have been alerted. They will respond shortly.",
+          });
+        },
+        onError: (err: any) => {
+          toast({
+            variant: "destructive",
+            title: "Could not raise SOS",
+            description: err?.message ?? "Please try again.",
+          });
+        }
+      }
+    );
+  };
+
   if (isLoading || !tracking) {
     return <div className="min-h-screen bg-background p-8" />;
   }
@@ -87,26 +121,75 @@ export default function TokenTracking() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "booked": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-      case "waiting": return "bg-amber-500/10 text-amber-500 border-amber-500/20";
-      case "serving": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+      case "booked":    return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+      case "waiting":   return "bg-amber-500/10 text-amber-500 border-amber-500/20";
+      case "serving":   return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
       case "completed": return "bg-slate-500/10 text-slate-500 border-slate-500/20";
-      default: return "bg-muted text-muted-foreground border-border";
+      default:          return "bg-muted text-muted-foreground border-border";
     }
   };
+
+  const isActive = booking.status === "booked" || booking.status === "waiting";
+  const hasPendingSos = sosStatus?.status === "pending";
+  const sosApproved   = sosStatus?.status === "approved";
+  const sosRejected   = sosStatus?.status === "rejected";
 
   return (
     <AuthGate>
       <div className="min-h-[100dvh] flex flex-col bg-background pb-12">
         <Navbar />
         <main className="flex-1 container mx-auto px-4 py-8 max-w-2xl space-y-8">
-          
+
+          {/* SOS status banner */}
+          <AnimatePresence>
+            {hasPendingSos && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                className="flex items-center gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-300 shadow-sm"
+              >
+                <Siren className="w-5 h-5 text-amber-600 animate-pulse shrink-0" />
+                <div className="flex-1">
+                  <p className="font-bold text-amber-800 text-sm">SOS Pending Review</p>
+                  <p className="text-xs text-amber-700">Staff have been alerted. Awaiting approval.</p>
+                </div>
+              </motion.div>
+            )}
+            {sosApproved && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-50 border border-emerald-300 shadow-sm"
+              >
+                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-bold text-emerald-800 text-sm">SOS Approved! You're at the front.</p>
+                  <p className="text-xs text-emerald-700">
+                    {sosStatus?.staffNote ? `Staff note: ${sosStatus.staffNote}` : "Please proceed to the counter immediately."}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+            {sosRejected && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-3 p-4 rounded-2xl bg-rose-50 border border-rose-300 shadow-sm"
+              >
+                <ShieldX className="w-5 h-5 text-rose-600 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-bold text-rose-800 text-sm">SOS Not Approved</p>
+                  <p className="text-xs text-rose-700">
+                    {sosStatus?.staffNote ? sosStatus.staffNote : "Please speak to branch staff directly if urgent."}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Token number */}
           <div className="text-center space-y-4">
             <div className={`inline-block px-4 py-1 rounded-full border text-sm font-bold uppercase tracking-wider ${getStatusColor(booking.status)}`}>
               {booking.status}
             </div>
-            
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", bounce: 0.5 }}
@@ -114,32 +197,33 @@ export default function TokenTracking() {
             >
               {booking.tokenNumber}
             </motion.div>
-            
             <div className="text-xl font-medium text-foreground">
               {booking.serviceName} <span className="text-muted-foreground mx-2">•</span> {booking.branchName}
             </div>
             {booking.priority && booking.priority !== "normal" && (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-bold uppercase tracking-wider">
-                Priority · {booking.priority}
+                {booking.priority === "emergency" ? "🆘 Emergency Priority" : `Priority · ${booking.priority}`}
               </div>
             )}
           </div>
 
+          {/* Stats */}
           <div className="grid grid-cols-3 gap-4">
             <Card className="p-4 text-center rounded-3xl border-card-border shadow-sm">
-              <p className="text-sm text-muted-foreground mb-1 flex items-center justify-center gap-1"><ArrowRight className="w-3.5 h-3.5"/> Serving</p>
+              <p className="text-sm text-muted-foreground mb-1 flex items-center justify-center gap-1"><ArrowRight className="w-3.5 h-3.5" /> Serving</p>
               <p className="text-2xl font-bold text-foreground">{currentlyServing || "-"}</p>
             </Card>
             <Card className="p-4 text-center rounded-3xl border-card-border shadow-sm">
-              <p className="text-sm text-muted-foreground mb-1 flex items-center justify-center gap-1"><Users className="w-3.5 h-3.5"/> Ahead</p>
+              <p className="text-sm text-muted-foreground mb-1 flex items-center justify-center gap-1"><Users className="w-3.5 h-3.5" /> Ahead</p>
               <p className="text-2xl font-bold text-foreground">{peopleAhead}</p>
             </Card>
             <Card className="p-4 text-center rounded-3xl border-card-border shadow-sm">
-              <p className="text-sm text-muted-foreground mb-1 flex items-center justify-center gap-1"><Clock className="w-3.5 h-3.5"/> Est Wait</p>
+              <p className="text-sm text-muted-foreground mb-1 flex items-center justify-center gap-1"><Clock className="w-3.5 h-3.5" /> Est Wait</p>
               <p className="text-2xl font-bold text-foreground">{estimatedWaitMinutes}m</p>
             </Card>
           </div>
 
+          {/* Leave Now */}
           <Card className={`p-6 rounded-3xl border shadow-md ${leaveNowAdvice.includes("urgent") ? "bg-primary/10 border-primary/30" : "bg-card border-card-border"}`}>
             <div className="flex items-start gap-4">
               <div className={`p-3 rounded-full ${leaveNowAdvice.includes("urgent") ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
@@ -152,6 +236,7 @@ export default function TokenTracking() {
             </div>
           </Card>
 
+          {/* Checklist */}
           {checklist && checklist.length > 0 && (
             <Card className="p-6 rounded-3xl border border-card-border shadow-sm space-y-4">
               <div className="flex items-center gap-2 mb-2">
@@ -161,8 +246,8 @@ export default function TokenTracking() {
               <div className="space-y-3">
                 {checklist.map((item) => (
                   <div key={item.key} className="flex items-start space-x-3 p-3 rounded-xl hover:bg-muted/50 transition-colors">
-                    <Checkbox 
-                      id={item.key} 
+                    <Checkbox
+                      id={item.key}
                       checked={completedItems.includes(item.key)}
                       onCheckedChange={(c) => handleChecklistToggle(item.key, !!c)}
                       className="mt-1"
@@ -179,6 +264,7 @@ export default function TokenTracking() {
             </Card>
           )}
 
+          {/* Recently called */}
           {recentlyCompleted.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Recently Called</h4>
@@ -192,8 +278,58 @@ export default function TokenTracking() {
             </div>
           )}
 
-          {booking.status === "booked" || booking.status === "waiting" ? (
+          {/* Action buttons */}
+          {isActive && (
             <div className="pt-6 border-t border-border flex flex-col gap-4">
+
+              {/* SOS Emergency Button */}
+              {!hasPendingSos && !sosApproved && (
+                <Dialog open={sosDialogOpen} onOpenChange={setSosDialogOpen}>
+                  <DialogTrigger asChild>
+                    <button className="w-full flex items-center justify-center gap-3 py-5 rounded-2xl bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white font-bold text-lg shadow-lg hover:shadow-rose-200 transition-all">
+                      <Siren className="w-6 h-6" />
+                      SOS — Emergency Token
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-3xl">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2 text-rose-600">
+                        <Siren className="w-5 h-5" /> Emergency Token Request
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-800 leading-relaxed">
+                        This will <strong>alert branch staff immediately</strong>. If approved, your token will be moved to the front of the queue. Use only for genuine emergencies.
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-foreground">Reason for emergency *</label>
+                        <Textarea
+                          placeholder="e.g. Medical condition, urgent document expiry, caring for young child..."
+                          value={sosReason}
+                          onChange={(e) => setSosReason(e.target.value)}
+                          className="resize-none rounded-xl"
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter className="gap-2">
+                      <Button variant="outline" onClick={() => setSosDialogOpen(false)} className="rounded-xl flex-1">
+                        <X className="w-4 h-4 mr-1" /> Cancel
+                      </Button>
+                      <Button
+                        onClick={handleRaiseSos}
+                        disabled={!sosReason.trim() || raiseSos.isPending}
+                        className="rounded-xl flex-1 bg-rose-600 hover:bg-rose-700 text-white"
+                      >
+                        <Siren className="w-4 h-4 mr-1" />
+                        {raiseSos.isPending ? "Sending..." : "Send SOS"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+
+              {/* Swap */}
               <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" className="w-full rounded-xl py-6 text-lg">
@@ -208,7 +344,7 @@ export default function TokenTracking() {
                     <p className="text-sm text-muted-foreground">
                       Offer your token ({booking.tokenNumber}) to other users. You can include a note explaining what time you're looking for.
                     </p>
-                    <Textarea 
+                    <Textarea
                       placeholder="e.g. Looking to swap for an afternoon slot..."
                       value={swapNote}
                       onChange={(e) => setSwapNote(e.target.value)}
@@ -227,8 +363,8 @@ export default function TokenTracking() {
                 Cancel Booking
               </button>
             </div>
-          ) : null}
-          
+          )}
+
         </main>
       </div>
     </AuthGate>

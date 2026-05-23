@@ -381,6 +381,81 @@ export const MarkNotificationReadResponse = zod.object({
   ok: zod.boolean(),
 });
 
+export const RaiseSosBody = zod.object({
+  bookingId: zod.number(),
+  reason: zod.string(),
+});
+
+export const RaiseSosResponse = zod.object({
+  id: zod.number(),
+  bookingId: zod.number(),
+  userId: zod.number(),
+  reason: zod.string(),
+  status: zod.string(),
+  staffNote: zod.string().optional(),
+  createdAt: zod.string(),
+  resolvedAt: zod.string().nullish(),
+});
+
+export const GetSosForBookingParams = zod.object({
+  bookingId: zod.coerce.number(),
+});
+
+export const GetSosForBookingResponse = zod.union([
+  zod.object({
+    id: zod.number(),
+    bookingId: zod.number(),
+    userId: zod.number(),
+    reason: zod.string(),
+    status: zod.string(),
+    staffNote: zod.string().optional(),
+    createdAt: zod.string(),
+    resolvedAt: zod.string().nullish(),
+  }),
+  zod.null(),
+]);
+
+export const ListPendingSosParams = zod.object({
+  branchId: zod.coerce.number(),
+});
+
+export const ListPendingSosResponseItem = zod.object({
+  id: zod.number(),
+  bookingId: zod.number(),
+  userId: zod.number(),
+  userName: zod.string(),
+  tokenNumber: zod.string(),
+  timeSlot: zod.string(),
+  reason: zod.string(),
+  status: zod.string(),
+  createdAt: zod.string(),
+});
+export const ListPendingSosResponse = zod.array(ListPendingSosResponseItem);
+
+export const ApproveSosParams = zod.object({
+  sosId: zod.coerce.number(),
+});
+
+export const ApproveSosBody = zod.object({
+  staffNote: zod.string().optional(),
+});
+
+export const ApproveSosResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+export const RejectSosParams = zod.object({
+  sosId: zod.coerce.number(),
+});
+
+export const RejectSosBody = zod.object({
+  staffNote: zod.string().optional(),
+});
+
+export const RejectSosResponse = zod.object({
+  ok: zod.boolean(),
+});
+
 export const AdminQueueViewParams = zod.object({
   branchId: zod.coerce.number(),
 });

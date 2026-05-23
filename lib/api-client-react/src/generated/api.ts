@@ -31,9 +31,13 @@ import type {
   Notification,
   OkResponse,
   QueueTracking,
+  RaiseSosBody,
   RegisterInput,
   Service,
   SmartSlot,
+  SosActionBody,
+  SosPendingItem,
+  SosRequest,
   SwapListing,
   UpdateBookingChecklistBody,
   UpdateBookingStatusBody,
@@ -1853,6 +1857,411 @@ export const useMarkNotificationRead = <
   TContext
 > => {
   return useMutation(getMarkNotificationReadMutationOptions(options));
+};
+
+export const getRaiseSosUrl = () => {
+  return `/api/sos`;
+};
+
+export const raiseSos = async (
+  raiseSosBody: RaiseSosBody,
+  options?: RequestInit,
+): Promise<SosRequest> => {
+  return customFetch<SosRequest>(getRaiseSosUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(raiseSosBody),
+  });
+};
+
+export const getRaiseSosMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof raiseSos>>,
+    TError,
+    { data: BodyType<RaiseSosBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof raiseSos>>,
+  TError,
+  { data: BodyType<RaiseSosBody> },
+  TContext
+> => {
+  const mutationKey = ["raiseSos"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof raiseSos>>,
+    { data: BodyType<RaiseSosBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return raiseSos(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RaiseSosMutationResult = NonNullable<
+  Awaited<ReturnType<typeof raiseSos>>
+>;
+export type RaiseSosMutationBody = BodyType<RaiseSosBody>;
+export type RaiseSosMutationError = ErrorType<unknown>;
+
+export const useRaiseSos = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof raiseSos>>,
+    TError,
+    { data: BodyType<RaiseSosBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof raiseSos>>,
+  TError,
+  { data: BodyType<RaiseSosBody> },
+  TContext
+> => {
+  return useMutation(getRaiseSosMutationOptions(options));
+};
+
+export const getGetSosForBookingUrl = (bookingId: number) => {
+  return `/api/sos/booking/${bookingId}`;
+};
+
+export const getSosForBooking = async (
+  bookingId: number,
+  options?: RequestInit,
+): Promise<SosRequest | null> => {
+  return customFetch<SosRequest | null>(getGetSosForBookingUrl(bookingId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSosForBookingQueryKey = (bookingId: number) => {
+  return [`/api/sos/booking/${bookingId}`] as const;
+};
+
+export const getGetSosForBookingQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSosForBooking>>,
+  TError = ErrorType<unknown>,
+>(
+  bookingId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSosForBooking>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetSosForBookingQueryKey(bookingId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getSosForBooking>>
+  > = ({ signal }) =>
+    getSosForBooking(bookingId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!bookingId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSosForBooking>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSosForBookingQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSosForBooking>>
+>;
+export type GetSosForBookingQueryError = ErrorType<unknown>;
+
+export function useGetSosForBooking<
+  TData = Awaited<ReturnType<typeof getSosForBooking>>,
+  TError = ErrorType<unknown>,
+>(
+  bookingId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSosForBooking>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSosForBookingQueryOptions(bookingId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getListPendingSosUrl = (branchId: number) => {
+  return `/api/admin/sos/${branchId}`;
+};
+
+export const listPendingSos = async (
+  branchId: number,
+  options?: RequestInit,
+): Promise<SosPendingItem[]> => {
+  return customFetch<SosPendingItem[]>(getListPendingSosUrl(branchId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListPendingSosQueryKey = (branchId: number) => {
+  return [`/api/admin/sos/${branchId}`] as const;
+};
+
+export const getListPendingSosQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPendingSos>>,
+  TError = ErrorType<unknown>,
+>(
+  branchId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPendingSos>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListPendingSosQueryKey(branchId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listPendingSos>>> = ({
+    signal,
+  }) => listPendingSos(branchId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!branchId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPendingSos>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListPendingSosQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPendingSos>>
+>;
+export type ListPendingSosQueryError = ErrorType<unknown>;
+
+export function useListPendingSos<
+  TData = Awaited<ReturnType<typeof listPendingSos>>,
+  TError = ErrorType<unknown>,
+>(
+  branchId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPendingSos>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListPendingSosQueryOptions(branchId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getApproveSosUrl = (sosId: number) => {
+  return `/api/admin/sos/${sosId}/approve`;
+};
+
+export const approveSos = async (
+  sosId: number,
+  sosActionBody: SosActionBody,
+  options?: RequestInit,
+): Promise<OkResponse> => {
+  return customFetch<OkResponse>(getApproveSosUrl(sosId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(sosActionBody),
+  });
+};
+
+export const getApproveSosMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof approveSos>>,
+    TError,
+    { sosId: number; data: BodyType<SosActionBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof approveSos>>,
+  TError,
+  { sosId: number; data: BodyType<SosActionBody> },
+  TContext
+> => {
+  const mutationKey = ["approveSos"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof approveSos>>,
+    { sosId: number; data: BodyType<SosActionBody> }
+  > = (props) => {
+    const { sosId, data } = props ?? {};
+
+    return approveSos(sosId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ApproveSosMutationResult = NonNullable<
+  Awaited<ReturnType<typeof approveSos>>
+>;
+export type ApproveSosMutationBody = BodyType<SosActionBody>;
+export type ApproveSosMutationError = ErrorType<unknown>;
+
+export const useApproveSos = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof approveSos>>,
+    TError,
+    { sosId: number; data: BodyType<SosActionBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof approveSos>>,
+  TError,
+  { sosId: number; data: BodyType<SosActionBody> },
+  TContext
+> => {
+  return useMutation(getApproveSosMutationOptions(options));
+};
+
+export const getRejectSosUrl = (sosId: number) => {
+  return `/api/admin/sos/${sosId}/reject`;
+};
+
+export const rejectSos = async (
+  sosId: number,
+  sosActionBody: SosActionBody,
+  options?: RequestInit,
+): Promise<OkResponse> => {
+  return customFetch<OkResponse>(getRejectSosUrl(sosId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(sosActionBody),
+  });
+};
+
+export const getRejectSosMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof rejectSos>>,
+    TError,
+    { sosId: number; data: BodyType<SosActionBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof rejectSos>>,
+  TError,
+  { sosId: number; data: BodyType<SosActionBody> },
+  TContext
+> => {
+  const mutationKey = ["rejectSos"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof rejectSos>>,
+    { sosId: number; data: BodyType<SosActionBody> }
+  > = (props) => {
+    const { sosId, data } = props ?? {};
+
+    return rejectSos(sosId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RejectSosMutationResult = NonNullable<
+  Awaited<ReturnType<typeof rejectSos>>
+>;
+export type RejectSosMutationBody = BodyType<SosActionBody>;
+export type RejectSosMutationError = ErrorType<unknown>;
+
+export const useRejectSos = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof rejectSos>>,
+    TError,
+    { sosId: number; data: BodyType<SosActionBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof rejectSos>>,
+  TError,
+  { sosId: number; data: BodyType<SosActionBody> },
+  TContext
+> => {
+  return useMutation(getRejectSosMutationOptions(options));
 };
 
 export const getAdminQueueViewUrl = (branchId: number) => {

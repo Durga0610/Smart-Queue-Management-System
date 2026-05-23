@@ -8,6 +8,7 @@ import queueRouter from "./queue";
 import swapRouter from "./swap";
 import adminRouter from "./admin";
 import notificationsRouter from "./notifications";
+import sosRouter from "./sos";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(queueRouter);
 router.use(swapRouter);
 router.use(adminRouter);
 router.use(notificationsRouter);
+router.use(sosRouter);
 
 export default router;
