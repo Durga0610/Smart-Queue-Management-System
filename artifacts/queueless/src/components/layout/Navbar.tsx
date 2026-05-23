@@ -29,7 +29,6 @@ export function Navbar() {
           <Link href="/branches" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Pulse
           </Link>
-          
           {user ? (
             <>
               {user.role === "customer" && (
