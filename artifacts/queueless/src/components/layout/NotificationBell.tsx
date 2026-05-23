@@ -107,6 +107,13 @@ export function NotificationBell() {
               </button>
             </div>
 
+            <button
+              onClick={() => { setOpen(false); setLocation("/notifications"); }}
+              className="w-full text-center text-xs font-semibold text-primary py-2.5 border-b border-border hover:bg-muted/50 transition-colors"
+            >
+              View all notifications →
+            </button>
+
             <div className="max-h-80 overflow-y-auto divide-y divide-border">
               {notifications.length === 0 ? (
                 <div className="py-10 text-center text-sm text-muted-foreground">

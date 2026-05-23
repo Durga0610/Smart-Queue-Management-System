@@ -13,6 +13,7 @@ import TokenTracking from "@/pages/TokenTracking";
 import Swap from "@/pages/Swap";
 import Admin from "@/pages/Admin";
 import Profile from "@/pages/Profile";
+import Notifications from "@/pages/Notifications";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/swap" component={Swap} />
       <Route path="/admin" component={Admin} />
       <Route path="/profile" component={Profile} />
+      <Route path="/notifications" component={Notifications} />
       <Route>
         <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background">
           <h1 className="text-6xl font-bold text-primary mb-4">404</h1>
