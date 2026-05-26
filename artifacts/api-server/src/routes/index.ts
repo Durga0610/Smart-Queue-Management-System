@@ -9,6 +9,7 @@ import swapRouter from "./swap";
 import adminRouter from "./admin";
 import notificationsRouter from "./notifications";
 import sosRouter from "./sos";
+import heatmapRouter from "./heatmap";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(swapRouter);
 router.use(adminRouter);
 router.use(notificationsRouter);
 router.use(sosRouter);
+router.use(heatmapRouter);
 
 export default router;

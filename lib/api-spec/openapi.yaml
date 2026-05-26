@@ -113,6 +113,24 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/BranchPulse" }
 
+  /branches/{branchId}/heatmap:
+    get:
+      operationId: getBranchHeatmap
+      tags: [branches]
+      parameters:
+        - in: path
+          name: branchId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Hourly crowd heatmap by day of week
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/HeatmapRow" }
+
   /services:
     get:
       operationId: listServices
@@ -604,6 +622,26 @@ components:
         email: { type: string }
         role: { type: string, enum: [customer, staff] }
         karma: { type: integer }
+
+    HeatmapCell:
+      type: object
+      required: [hour, label, bookingCount, level]
+      properties:
+        hour: { type: integer }
+        label: { type: string }
+        bookingCount: { type: integer }
+        level: { type: string, enum: [calm, moderate, busy, packed] }
+
+    HeatmapRow:
+      type: object
+      required: [day, shortDay, isToday, cells]
+      properties:
+        day: { type: string }
+        shortDay: { type: string }
+        isToday: { type: boolean }
+        cells:
+          type: array
+          items: { $ref: "#/components/schemas/HeatmapCell" }
 
     BranchPulse:
       type: object

@@ -27,6 +27,7 @@ import type {
   CreateSwapListingBody,
   GetSmartSlotsParams,
   HealthStatus,
+  HeatmapRow,
   LoginInput,
   Notification,
   OkResponse,
@@ -550,6 +551,87 @@ export function useGetBranch<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetBranchQueryOptions(branchId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getGetBranchHeatmapUrl = (branchId: number) => {
+  return `/api/branches/${branchId}/heatmap`;
+};
+
+export const getBranchHeatmap = async (
+  branchId: number,
+  options?: RequestInit,
+): Promise<HeatmapRow[]> => {
+  return customFetch<HeatmapRow[]>(getGetBranchHeatmapUrl(branchId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetBranchHeatmapQueryKey = (branchId: number) => {
+  return [`/api/branches/${branchId}/heatmap`] as const;
+};
+
+export const getGetBranchHeatmapQueryOptions = <
+  TData = Awaited<ReturnType<typeof getBranchHeatmap>>,
+  TError = ErrorType<unknown>,
+>(
+  branchId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getBranchHeatmap>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetBranchHeatmapQueryKey(branchId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getBranchHeatmap>>
+  > = ({ signal }) => getBranchHeatmap(branchId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!branchId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getBranchHeatmap>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetBranchHeatmapQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getBranchHeatmap>>
+>;
+export type GetBranchHeatmapQueryError = ErrorType<unknown>;
+
+export function useGetBranchHeatmap<
+  TData = Awaited<ReturnType<typeof getBranchHeatmap>>,
+  TError = ErrorType<unknown>,
+>(
+  branchId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getBranchHeatmap>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetBranchHeatmapQueryOptions(branchId, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

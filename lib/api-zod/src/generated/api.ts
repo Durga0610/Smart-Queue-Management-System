@@ -83,6 +83,25 @@ export const GetBranchResponse = zod.object({
   nowServing: zod.string().nullish(),
 });
 
+export const GetBranchHeatmapParams = zod.object({
+  branchId: zod.coerce.number(),
+});
+
+export const GetBranchHeatmapResponseItem = zod.object({
+  day: zod.string(),
+  shortDay: zod.string(),
+  isToday: zod.boolean(),
+  cells: zod.array(
+    zod.object({
+      hour: zod.number(),
+      label: zod.string(),
+      bookingCount: zod.number(),
+      level: zod.enum(["calm", "moderate", "busy", "packed"]),
+    }),
+  ),
+});
+export const GetBranchHeatmapResponse = zod.array(GetBranchHeatmapResponseItem);
+
 export const ListServicesResponseItem = zod.object({
   id: zod.number(),
   name: zod.string(),

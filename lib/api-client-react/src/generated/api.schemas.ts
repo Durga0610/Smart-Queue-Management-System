@@ -39,6 +39,30 @@ export interface User {
   karma: number;
 }
 
+export type HeatmapCellLevel =
+  (typeof HeatmapCellLevel)[keyof typeof HeatmapCellLevel];
+
+export const HeatmapCellLevel = {
+  calm: "calm",
+  moderate: "moderate",
+  busy: "busy",
+  packed: "packed",
+} as const;
+
+export interface HeatmapCell {
+  hour: number;
+  label: string;
+  bookingCount: number;
+  level: HeatmapCellLevel;
+}
+
+export interface HeatmapRow {
+  day: string;
+  shortDay: string;
+  isToday: boolean;
+  cells: HeatmapCell[];
+}
+
 export type BranchPulsePulseLevel =
   (typeof BranchPulsePulseLevel)[keyof typeof BranchPulsePulseLevel];
 
