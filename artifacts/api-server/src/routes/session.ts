@@ -24,6 +24,7 @@ router.post("/session/register", async (req, res): Promise<void> => {
     password,
     role: "customer",
     karma: 50,
+    createdAt: new Date(),
   }).returning();
   if (!u) {
     res.status(500).json({ error: "Could not create user" });

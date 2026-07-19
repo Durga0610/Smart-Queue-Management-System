@@ -6,7 +6,10 @@ import {
   useListMyBookings,
   useListBranches,
   useListNotifications,
+  useLoginUser,
+  getGetMeQueryKey,
 } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -92,42 +95,22 @@ export default function Home() {
     query: { enabled: !!user && user.role === "customer", refetchInterval: 15000 },
   });
 
-  useEffect(() => {
-    if (isStaff) setLocation("/admin");
-  }, [isStaff, setLocation]);
+  const loginUser = useLoginUser();
+  const queryClient = useQueryClient();
 
-  if (!user) {
+  useEffect(() => {
+    if (meLoading) return;
+    if (!user) {
+      setLocation("/login");
+    } else if (isStaff) {
+      setLocation("/admin");
+    }
+  }, [isStaff, user, meLoading, setLocation]);
+
+  if (meLoading || !user || isStaff) {
     return (
-      <div className="min-h-[100dvh] flex flex-col bg-background">
-        <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <div className="max-w-2xl space-y-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-              <Activity className="w-4 h-4" />
-              <span>Smart Queue Management</span>
-            </div>
-            <h1 className="text-5xl sm:text-6xl font-bold text-foreground tracking-tight leading-tight">
-              Wait less.<br />Live more.
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed">
-              QueueLess Pulse transforms standing in line into moving forward. We hold your spot so you don't have to.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
-              <button
-                onClick={() => setLocation("/register")}
-                className="w-full sm:w-auto px-8 py-4 bg-primary text-primary-foreground rounded-full font-semibold text-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-              >
-                Get Started
-              </button>
-              <button
-                onClick={() => setLocation("/branches")}
-                className="w-full sm:w-auto px-8 py-4 bg-secondary text-secondary-foreground rounded-full font-semibold text-lg hover:bg-secondary/80 transition-all"
-              >
-                View Branch Pulse
-              </button>
-            </div>
-          </div>
-        </main>
+      <div className="min-h-[100dvh] flex flex-col bg-background items-center justify-center">
+        <Activity className="w-8 h-8 animate-pulse text-primary opacity-50" />
       </div>
     );
   }

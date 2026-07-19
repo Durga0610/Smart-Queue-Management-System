@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 import { logger } from "./logger";
 
 export async function seedIfEmpty(): Promise<void> {
-  const [{ count: userCount }] = await db.select({ count: sql<number>`count(*)::int` }).from(usersTable);
+  const [{ count: userCount }] = await db.select({ count: sql<number>`count(*)` }).from(usersTable);
   if (userCount > 0) {
     logger.info({ userCount }, "Seed skipped — data already present");
     return;
@@ -11,10 +11,12 @@ export async function seedIfEmpty(): Promise<void> {
 
   logger.info("Seeding initial data");
 
+  const now = new Date();
+
   await db.insert(usersTable).values([
-    { name: "Demo Customer", email: "demo@queueless.app", password: "demo123", role: "customer", karma: 78 },
-    { name: "Aisha Rahman", email: "aisha@queueless.app", password: "demo123", role: "customer", karma: 92 },
-    { name: "Branch Manager", email: "staff@queueless.app", password: "staff123", role: "staff", karma: 100 },
+    { name: "Demo Customer", email: "demo@queueless.app", password: "demo123", role: "customer", karma: 78, createdAt: now },
+    { name: "Aisha Rahman", email: "aisha@queueless.app", password: "demo123", role: "customer", karma: 92, createdAt: now },
+    { name: "Branch Manager", email: "staff@queueless.app", password: "staff123", role: "staff", karma: 100, createdAt: now },
   ]);
 
   const branches = await db.insert(branchesTable).values([
@@ -67,12 +69,12 @@ export async function seedIfEmpty(): Promise<void> {
   const today = new Date().toISOString().slice(0, 10);
   const flagship = branches[0]!.id;
   await db.insert(bookingsTable).values([
-    { userId: 2, branchId: flagship, serviceId: byCode["CD"], bookingDate: today, timeSlot: "10:00 AM", tokenNumber: "CD-101", status: "completed", servedAt: new Date() },
-    { userId: 2, branchId: flagship, serviceId: byCode["CW"], bookingDate: today, timeSlot: "10:15 AM", tokenNumber: "CW-102", status: "completed", servedAt: new Date() },
-    { userId: 2, branchId: flagship, serviceId: byCode["AO"], bookingDate: today, timeSlot: "10:30 AM", tokenNumber: "AO-103", status: "serving" },
-    { userId: 1, branchId: flagship, serviceId: byCode["CD"], bookingDate: today, timeSlot: "10:45 AM", tokenNumber: "CD-104", status: "waiting" },
-    { userId: 2, branchId: flagship, serviceId: byCode["LE"], bookingDate: today, timeSlot: "11:00 AM", tokenNumber: "LE-105", status: "waiting" },
-    { userId: 1, branchId: branches[1]!.id, serviceId: byCode["CW"], bookingDate: today, timeSlot: "11:30 AM", tokenNumber: "CW-201", status: "waiting" },
+    { userId: 2, branchId: flagship, serviceId: byCode["CD"], bookingDate: today, timeSlot: "10:00 AM", tokenNumber: "CD-101", status: "completed", createdAt: now, servedAt: now },
+    { userId: 2, branchId: flagship, serviceId: byCode["CW"], bookingDate: today, timeSlot: "10:15 AM", tokenNumber: "CW-102", status: "completed", createdAt: now, servedAt: now },
+    { userId: 2, branchId: flagship, serviceId: byCode["AO"], bookingDate: today, timeSlot: "10:30 AM", tokenNumber: "AO-103", status: "serving", createdAt: now },
+    { userId: 1, branchId: flagship, serviceId: byCode["CD"], bookingDate: today, timeSlot: "10:45 AM", tokenNumber: "CD-104", status: "waiting", createdAt: now },
+    { userId: 2, branchId: flagship, serviceId: byCode["LE"], bookingDate: today, timeSlot: "11:00 AM", tokenNumber: "LE-105", status: "waiting", createdAt: now },
+    { userId: 1, branchId: branches[1]!.id, serviceId: byCode["CW"], bookingDate: today, timeSlot: "11:30 AM", tokenNumber: "CW-201", status: "waiting", createdAt: now },
   ]);
 
   logger.info("Seed complete");

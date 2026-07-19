@@ -1,0 +1,9 @@
+@echo off
+set "PATH=C:\Users\HOME\node_local22\node-v22.14.0-win-x64;%PATH%"
+echo Starting pnpm installation...
+call npm install -g pnpm@9
+echo Installing project dependencies...
+call pnpm install
+echo Starting project server...
+call pnpm run dev
+pause

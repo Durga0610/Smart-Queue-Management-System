@@ -38,12 +38,7 @@ export function AuthGate({ children, requireStaff }: AuthGateProps) {
           <p className="text-muted-foreground">
             This area is restricted to branch staff.
           </p>
-          <div className="bg-muted/50 p-4 rounded-xl text-left space-y-2 mt-4">
-            <p className="text-sm font-medium text-foreground">Demo Credentials:</p>
-            <p className="text-sm text-muted-foreground font-mono bg-background p-2 rounded border border-border">
-              staff@queueless.app / staff123
-            </p>
-          </div>
+
           <button
             onClick={() => setLocation("/")}
             className="w-full bg-primary text-primary-foreground h-10 rounded-lg font-medium hover:bg-primary/90 transition-colors"

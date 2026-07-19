@@ -1,39 +1,27 @@
-import {
-  pgTable,
-  serial,
-  text,
-  integer,
-  timestamp,
-  doublePrecision,
-  uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { sqliteTable, integer, text, real } from "drizzle-orm/sqlite-core";
 
-export const usersTable = pgTable(
-  "users",
-  {
-    id: serial("id").primaryKey(),
-    name: text("name").notNull(),
-    email: text("email").notNull(),
-    password: text("password").notNull(),
-    role: text("role").notNull().default("customer"),
-    karma: integer("karma").notNull().default(50),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  },
-  (t) => [uniqueIndex("users_email_unique").on(t.email)],
-);
+export const usersTable = sqliteTable("users", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  role: text("role").notNull().default("customer"),
+  karma: integer("karma").notNull().default(50),
+  createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
 
-export const branchesTable = pgTable("branches", {
-  id: serial("id").primaryKey(),
+export const branchesTable = sqliteTable("branches", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   address: text("address").notNull(),
   city: text("city").notNull(),
-  lat: doublePrecision("lat").notNull(),
-  lng: doublePrecision("lng").notNull(),
+  lat: real("lat").notNull(),
+  lng: real("lng").notNull(),
   openCounters: integer("open_counters").notNull().default(3),
 });
 
-export const servicesTable = pgTable("services", {
-  id: serial("id").primaryKey(),
+export const servicesTable = sqliteTable("services", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   code: text("code").notNull(),
   avgDurationMinutes: integer("avg_duration_minutes").notNull().default(8),
@@ -41,8 +29,8 @@ export const servicesTable = pgTable("services", {
   description: text("description").notNull().default(""),
 });
 
-export const checklistItemsTable = pgTable("checklist_items", {
-  id: serial("id").primaryKey(),
+export const checklistItemsTable = sqliteTable("checklist_items", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   serviceId: integer("service_id").notNull().references(() => servicesTable.id),
   itemKey: text("item_key").notNull(),
   label: text("label").notNull(),
@@ -50,8 +38,8 @@ export const checklistItemsTable = pgTable("checklist_items", {
   hint: text("hint").notNull().default(""),
 });
 
-export const bookingsTable = pgTable("bookings", {
-  id: serial("id").primaryKey(),
+export const bookingsTable = sqliteTable("bookings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").notNull().references(() => usersTable.id),
   branchId: integer("branch_id").notNull().references(() => branchesTable.id),
   serviceId: integer("service_id").notNull().references(() => servicesTable.id),
@@ -62,38 +50,38 @@ export const bookingsTable = pgTable("bookings", {
   groupSize: integer("group_size").notNull().default(1),
   priority: text("priority").notNull().default("normal"),
   checklistDone: text("checklist_done").notNull().default("[]"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  servedAt: timestamp("served_at", { withTimezone: true }),
+  createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  servedAt: integer("served_at", { mode: 'timestamp' }),
 });
 
-export const notificationsTable = pgTable("notifications", {
-  id: serial("id").primaryKey(),
+export const notificationsTable = sqliteTable("notifications", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").notNull().references(() => usersTable.id),
   type: text("type").notNull(),
   title: text("title").notNull(),
   body: text("body").notNull(),
   read: integer("read").notNull().default(0),
   bookingId: integer("booking_id"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
-export const sosRequestsTable = pgTable("sos_requests", {
-  id: serial("id").primaryKey(),
+export const sosRequestsTable = sqliteTable("sos_requests", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   bookingId: integer("booking_id").notNull().references(() => bookingsTable.id),
   userId: integer("user_id").notNull().references(() => usersTable.id),
   branchId: integer("branch_id").notNull().references(() => branchesTable.id),
   reason: text("reason").notNull(),
   status: text("status").notNull().default("pending"),
   staffNote: text("staff_note").notNull().default(""),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  resolvedAt: integer("resolved_at", { mode: 'timestamp' }),
 });
 
-export const swapListingsTable = pgTable("swap_listings", {
-  id: serial("id").primaryKey(),
+export const swapListingsTable = sqliteTable("swap_listings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   bookingId: integer("booking_id").notNull().references(() => bookingsTable.id),
   ownerId: integer("owner_id").notNull().references(() => usersTable.id),
   note: text("note").notNull().default(""),
   status: text("status").notNull().default("open"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: integer("created_at", { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });

@@ -4,7 +4,7 @@ import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
 const SECRET = process.env.SESSION_SECRET ?? "dev-secret-change-me";
-const COOKIE_NAME = "qless_sid";
+const COOKIE_NAME = "qless_sid_v2";
 
 function sign(value: string): string {
   const h = crypto.createHmac("sha256", SECRET).update(value).digest("base64url");

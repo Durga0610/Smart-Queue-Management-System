@@ -103,7 +103,7 @@ router.post("/bookings", requireUser, async (req, res): Promise<void> => {
     return;
   }
   const [{ count }] = await db
-    .select({ count: sql<number>`count(*)::int` })
+    .select({ count: sql<number>`cast(count(*) as integer)` })
     .from(bookingsTable)
     .where(and(eq(bookingsTable.branchId, branchId), eq(bookingsTable.serviceId, serviceId), eq(bookingsTable.bookingDate, bookingDate)));
   const tokenNumber = makeTokenNumber(service.code, count + 1);

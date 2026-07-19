@@ -5,6 +5,9 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
+import path from "path";
+import fs from "fs";
+
 const app: Express = express();
 
 app.use(
@@ -26,5 +29,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
+
+const publicPath = path.resolve(import.meta.dirname, "../../queueless/dist/public");
+
+if (fs.existsSync(publicPath)) {
+  app.use(express.static(publicPath));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api")) {
+      return next();
+    }
+    res.sendFile(path.resolve(publicPath, "index.html"));
+  });
+} else {
+  app.get("/", (req, res) => {
+    res.send("Backend API Server is running. Please build the frontend first to serve it here.");
+  });
+}
 
 export default app;

@@ -34,8 +34,8 @@ export default function Register() {
       { data: values },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-          setLocation("/");
+          toast({ title: "Account created!", description: "Please log in with your credentials." });
+          setLocation("/login");
         },
         onError: (err: unknown) => {
           const data = (err as { data?: { error?: string } } | undefined)?.data;

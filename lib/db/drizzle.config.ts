@@ -1,14 +1,10 @@
-import { defineConfig } from "drizzle-kit";
-import path from "path";
+import type { Config } from "drizzle-kit";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL, ensure the database is provisioned");
-}
-
-export default defineConfig({
-  schema: path.join(__dirname, "./src/schema/index.ts"),
-  dialect: "postgresql",
+export default {
+  schema: "./src/schema/index.ts",
+  out: "./migrations",
+  dialect: "sqlite",
   dbCredentials: {
-    url: process.env.DATABASE_URL,
+    url: "file:C:/Users/HOME/Downloads/Unique-Finance-Tracker/Unique-Finance-Tracker/local.db",
   },
-});
+} satisfies Config;

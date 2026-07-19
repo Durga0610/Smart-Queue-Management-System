@@ -100,15 +100,7 @@ export default function Login() {
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl border-card-border bg-muted/50">
-            <CardContent className="p-4 text-sm text-center">
-              <p className="font-medium mb-2">Demo Accounts</p>
-              <div className="space-y-1 text-muted-foreground font-mono">
-                <p>Customer: demo@queueless.app / demo123</p>
-                <p>Staff: staff@queueless.app / staff123</p>
-              </div>
-            </CardContent>
-          </Card>
+
 
           <p className="text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
