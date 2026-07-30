@@ -1,4 +1,4 @@
-# 💰 Unique Finance Tracker
+# 💰 Smart Queue Management System for bank
 
 A modern and user-friendly personal finance tracking application that helps users manage their income, expenses, savings, and financial goals through a simple and responsive interface.
 
