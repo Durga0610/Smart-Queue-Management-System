@@ -2,8 +2,10 @@ import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 import * as schema from "./schema";
 
+const DATABASE_URL = process.env.DATABASE_URL || "file:./local.db";
+
 export const client = createClient({
-  url: "file:C:/Users/HOME/Downloads/Unique-Finance-Tracker/Unique-Finance-Tracker/local.db",
+  url: DATABASE_URL,
 });
 
 export const db = drizzle(client, { schema });
