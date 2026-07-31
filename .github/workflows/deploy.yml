@@ -53,6 +53,7 @@ jobs:
         env:
           BASE_PATH: /Smart-Queue-Management-System/
           PORT: 5173
+          VITE_API_URL: https://smart-queue-api-iaiv.onrender.com
 
       - name: Add 404.html for SPA routing
         run: cp ./artifacts/queueless/dist/public/index.html ./artifacts/queueless/dist/public/404.html
