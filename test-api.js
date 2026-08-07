@@ -5,7 +5,7 @@ async function test() {
     const res = await fetch("https://smart-queue-api-iaiv.onrender.com/api/session/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "AI Test", email: "aitest@gmail.com", password: "password123" })
+      body: JSON.stringify({ name: "AI Test", email: `test_${Date.now()}@gmail.com`, password: "password123" })
     });
     const text = await res.text();
     console.log("Status:", res.status);
