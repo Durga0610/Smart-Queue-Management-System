@@ -48,7 +48,6 @@ Thumbs.db
 .cache/
 .local/
 
-local.db
 *.log
 *.txt
 test_*.js
