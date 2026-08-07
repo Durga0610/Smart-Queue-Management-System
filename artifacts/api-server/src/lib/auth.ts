@@ -26,7 +26,8 @@ export function setSession(res: Response, userId: number): void {
   const value = sign(String(userId));
   res.cookie(COOKIE_NAME, value, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 1000 * 60 * 60 * 24 * 30,
   });
